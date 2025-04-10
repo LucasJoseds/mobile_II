@@ -1,35 +1,42 @@
 import '../models/contato.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../models/contato.dart';
 
 class ContatoService {
-  final List<Contato> _contatos = [];
-  int _nextId = 1;
+  final String baseUrl = 'http://localhost:8080';
 
-  List<Contato> getAll() => _contatos;
-
-  Contato create(String nome, String telefone) {
-    final contato = Contato(id: _nextId++, nome: nome, telefone: telefone);
-    _contatos.add(contato);
-    return contato;
+  Future<List<Contato>> getContatos() async {
+    final response = await http.get(Uri.parse('$baseUrl/contatos'));
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map((json) => Contato.fromJson(json)).toList();
+    } else {
+      throw Exception('Erro ao carregar contatos');
+    }
   }
 
-  Contato? update(int id, String nome, String telefone) {
-    final index = _contatos.indexWhere((c) => c.id == id);
-    if (index == -1) return null;
-    final contato = Contato(id: id, nome: nome, telefone: telefone);
-    _contatos[index] = contato;
-    return contato;
-  }
-
-  bool delete(int id) {
-    final originalLength = _contatos.length;
-    _contatos.removeWhere((c) => c.id == id);
-    return _contatos.length < originalLength;
-  }
-
-  Contato? getById(int id) {
-    return _contatos.firstWhere(
-      (c) => c.id == id,
-      orElse: () => null as Contato,
+  Future<void> adicionarContato(Contato contato) async {
+    await http.post(
+      Uri.parse('$baseUrl/contatos'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(contato.toJson()),
     );
+  }
+
+  Future<void> atualizarContato(int id, Contato contato) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/contatos/$id'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(contato.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Erro ao atualizar contato');
+    }
+  }
+
+  Future<void> deletarContato(int id) async {
+    await http.delete(Uri.parse('$baseUrl/contatos/$id'));
   }
 }

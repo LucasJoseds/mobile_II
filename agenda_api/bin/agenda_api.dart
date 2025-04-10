@@ -59,8 +59,10 @@ void main() async {
   });
 
   router.delete('/contatos/<id|[0-9]+>', (Request request, String id) {
-    final removed = contatos.removeWhere((c) => c.id == int.parse(id));
-    return removed > 0
+    final idInt = int.parse(id);
+    final countBefore = contatos.where((c) => c.id == idInt).length;
+    contatos.removeWhere((c) => c.id == idInt);
+    return countBefore > 0
         ? Response.ok('Removido')
         : Response.notFound('Contato não encontrado');
   });

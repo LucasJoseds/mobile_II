@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import '../models/contato.dart';
+import 'package:mobile_a1/models/contato.dart';
 import '../services/contato_service.dart';
 
 class ContatoForm extends StatefulWidget {
   final ContatoService service;
   final Contato? contato;
 
-  const ContatoForm({super.key, required this.service, this.contato});
+  const ContatoForm({Key? key, required this.service, this.contato})
+    : super(key: key);
 
   @override
   State<ContatoForm> createState() => _ContatoFormState();
@@ -14,30 +15,26 @@ class ContatoForm extends StatefulWidget {
 
 class _ContatoFormState extends State<ContatoForm> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nomeController;
-  late TextEditingController _telefoneController;
+  String? _nome;
+  String? _telefone;
 
-  @override
-  void initState() {
-    super.initState();
-    _nomeController = TextEditingController(text: widget.contato?.nome ?? '');
-    _telefoneController = TextEditingController(
-      text: widget.contato?.telefone ?? '',
-    );
-  }
-
-  void _salvar() {
+  void _salvar() async {
     if (_formKey.currentState!.validate()) {
-      final nome = _nomeController.text;
-      final telefone = _telefoneController.text;
+      _formKey.currentState!.save();
+
+      final contato = Contato(
+        id: widget.contato?.id ?? 0,
+        nome: _nome!,
+        telefone: _telefone!,
+      );
 
       if (widget.contato == null) {
-        widget.service.create(nome, telefone);
+        await widget.service.adicionarContato(contato);
       } else {
-        widget.service.update(widget.contato!.id, nome, telefone);
+        await widget.service.atualizarContato(contato.id, contato);
       }
 
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     }
   }
 
@@ -45,7 +42,12 @@ class _ContatoFormState extends State<ContatoForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.contato == null ? 'Novo Contato' : 'Editar Contato'),
+        title: Text(
+          widget.contato == null ? 'Adicionar Contato' : 'Editar Contato',
+        ),
+        backgroundColor: Colors.orange,
+        centerTitle: true,
+        elevation: 4,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -54,26 +56,66 @@ class _ContatoFormState extends State<ContatoForm> {
           child: Column(
             children: [
               TextFormField(
-                controller: _nomeController,
-                decoration: const InputDecoration(labelText: 'Nome'),
+                initialValue: widget.contato?.nome ?? '',
+                decoration: InputDecoration(
+                  labelText: 'Nome',
+                  labelStyle: TextStyle(color: Colors.orange),
+                  prefixIcon: Icon(Icons.person, color: Colors.orange),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.orange),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.orange.shade200),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
                 validator:
                     (value) =>
                         value == null || value.isEmpty
                             ? 'Informe o nome'
                             : null,
+                onSaved: (value) => _nome = value,
               ),
+              const SizedBox(height: 16),
               TextFormField(
-                controller: _telefoneController,
-                decoration: const InputDecoration(labelText: 'Telefone'),
+                initialValue: widget.contato?.telefone ?? '',
+                decoration: InputDecoration(
+                  labelText: 'Telefone',
+                  labelStyle: TextStyle(color: Colors.orange),
+                  prefixIcon: Icon(Icons.phone, color: Colors.orange),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.orange),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.orange.shade200),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
                 keyboardType: TextInputType.phone,
                 validator:
                     (value) =>
                         value == null || value.isEmpty
                             ? 'Informe o telefone'
                             : null,
+                onSaved: (value) => _telefone = value,
               ),
               const SizedBox(height: 20),
-              ElevatedButton(onPressed: _salvar, child: const Text('Salvar')),
+              ElevatedButton(
+                onPressed: _salvar,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text('Salvar', style: TextStyle(fontSize: 16)),
+              ),
             ],
           ),
         ),
