@@ -6,4 +6,3 @@ Este é um projeto desenvolvido na disciplina **Programação para Dispositivos 
 
 - Cadastro, edição e remoção de contatos
 - Integração com API via HTTP
-- Interface responsiva e moderna
